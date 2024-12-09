@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("USBComWebUI")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+66c3676daaf31b2f0c531d11850c21ec4917c6ea")]
 [assembly: System.Reflection.AssemblyProductAttribute("USBComWebUI")]
 [assembly: System.Reflection.AssemblyTitleAttribute("USBComWebUI")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
