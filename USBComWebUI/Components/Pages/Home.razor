@@ -1,4 +1,5 @@
 ﻿@page "/"
+@rendermode InteractiveServer
 
 <PageTitle>Chat</PageTitle>
 
@@ -15,8 +16,10 @@
                     <li>@message</li>
                 }
             </ul>
+            <div>@NewMessage</div>
             <input type="text" @bind="NewMessage" placeholder="Type a message..." class="form-control" />
-            <button @onclick="SendMessage" class="btn btn-primary mt-2" disabled="@(string.IsNullOrEmpty(SelectedCOMPort))">Send</button>
+
+            <button @onclick="SendMessage" class="btn btn-primary mt-2">Send</button>
         </div>
 
         <!-- Serial Port Section -->
@@ -53,7 +56,7 @@
 @code {
     // Chat-related variables
     private List<string> Messages = new List<string>();
-    private string NewMessage;
+    private string NewMessage = "";
 
     // Serial Port-related variables
     private List<string> COMPorts = new List<string>();
@@ -65,6 +68,9 @@
     protected override async Task OnInitializedAsync()
     {
         await LoadCOMPorts();
+
+        Messages.Add("You: Xin Chao");
+        Messages.Add("You: Tra loi di");
     }
 
     private async Task LoadCOMPorts()
@@ -82,29 +88,27 @@
 
     private void SendMessage()
     {
-        if (!string.IsNullOrEmpty(NewMessage))
-        {
             Messages.Add($"You: {NewMessage}");
 
             // Send the message to the serial port
-            if (CurrentSerialPort != null && CurrentSerialPort.IsOpen)
-            {
-                try
-                {
-                    CurrentSerialPort.WriteLine(NewMessage);
-                }
-                catch (Exception ex)
-                {
-                    Messages.Add($"Error sending message: {ex.Message}");
-                }
-            }
-            else
-            {
-                Messages.Add("Error: Serial port is not connected.");
-            }
+            // if (CurrentSerialPort != null && CurrentSerialPort.IsOpen)
+            // {
+            //     try
+            //     {
+            //         CurrentSerialPort.WriteLine(NewMessage);
+            //     }
+            //     catch (Exception ex)
+            //     {
+            //         Messages.Add($"Error sending message: {ex.Message}");
+            //     }
+            // }
+            // else
+            // {
+            //     Messages.Add("Error: Serial port is not connected.");
+            // }
 
             NewMessage = string.Empty;
-        }
+        // }
     }
 
     private async Task ConnectToSerialPort()
