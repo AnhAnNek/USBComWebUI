@@ -4,6 +4,7 @@
 @implements IDisposable
 @using ChartJs.Blazor
 @using ChartJs.Blazor.PieChart
+@using ChartJs.Blazor.LineChart
 
 
 <PageTitle>LED Control System</PageTitle>   
@@ -101,10 +102,13 @@ else
         </div>
     </div>
     <Chart Config="_pieConfig"></Chart>
+
+    <Chart Config="_lineConfig"></Chart>
 </div>
 
 @code {
     private PieConfig _pieConfig;
+    private LineConfig _lineConfig;
     private string selectedComport;
     private int selectedBaudrate = 9600;
     private string selectedParity = "None";
@@ -134,7 +138,36 @@ else
 
         Init();
         ConfigurePieConfig();
+        ConfigureLineConfig();
     }
+    private void ConfigureLineConfig()
+    {
+        _lineConfig = new LineConfig();
+        _lineConfig.Options = new LineOptions
+            {
+                Responsive = true,
+                Title = new OptionsTitle
+                {
+                    Display = true,
+                    Text = "Line Chart Example"
+                }
+            };
+
+        // Thêm dữ liệu cho LineChart
+        _lineConfig.Data.Labels.Add("January");
+        _lineConfig.Data.Labels.Add("February");
+        _lineConfig.Data.Labels.Add("March");
+
+        var dataset = new LineDataset<int>(new[] { 10,140, 15 })
+            {
+                Label = "Sample Data",  // Dòng dữ liệu
+                Fill = true,  // Cho phép điền màu dưới đường
+                BorderColor = ColorUtil.ColorHexString(0, 0, 255),  // Màu đường
+                BackgroundColor = ColorUtil.ColorHexString(0, 0, 255)  // Màu nền của đường (màu trong suốt)
+            };
+        _lineConfig.Data.Datasets.Add(dataset);
+    }
+
     private void ConfigurePieConfig(){
         _pieConfig = new PieConfig();
         _pieConfig.Options = new PieOptions
@@ -149,6 +182,7 @@ else
         foreach(var party in new []{"part1", "part2","part3"}){
             _pieConfig.Data.Labels.Add(party);
         }
+
         var dataset = new PieDataset<int>(new[] { 35, 40,15 }){
             BackgroundColor = new[]{
                 ColorUtil.ColorHexString(255,0,0),
