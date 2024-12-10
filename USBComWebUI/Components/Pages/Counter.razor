@@ -2,8 +2,17 @@
 @using USBComWebUI.Components.Services
 @rendermode InteractiveServer
 @implements IDisposable
+@using ChartJs.Blazor
+@using ChartJs.Blazor.PieChart
 
-<PageTitle>LED Control System</PageTitle>
+
+<PageTitle>LED Control System</PageTitle>   
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+
+<!-- This is the glue between Blazor and Chart.js -->
+<script src="_content/ChartJs.Blazor.Fork/ChartJsBlazorInterop.js"></script>
 
 @if (isSuccess)
 {
@@ -91,9 +100,11 @@ else
             </div>
         </div>
     </div>
+    <Chart Config="_pieConfig"></Chart>
 </div>
 
 @code {
+    private PieConfig _pieConfig;
     private string selectedComport;
     private int selectedBaudrate = 9600;
     private string selectedParity = "None";
@@ -120,7 +131,35 @@ else
 
     protected override void OnInitialized()
     {
+
         Init();
+        ConfigurePieConfig();
+    }
+    private void ConfigurePieConfig(){
+        _pieConfig = new PieConfig();
+        _pieConfig.Options = new PieOptions
+            {
+                Responsive = true,
+                Title = new OptionsTitle
+                {
+                    Display = true,
+                    Text = "my chart"
+                }
+            };
+        foreach(var party in new []{"part1", "part2","part3"}){
+            _pieConfig.Data.Labels.Add(party);
+        }
+        var dataset = new PieDataset<int>(new[] { 35, 40,15 }){
+            BackgroundColor = new[]{
+                ColorUtil.ColorHexString(255,0,0),
+                ColorUtil.ColorHexString(0,255,0),
+                ColorUtil.ColorHexString(0,0,255),
+
+            }
+        };
+        _pieConfig.Data.Datasets.Add(dataset);
+
+
     }
 
     private void Init()

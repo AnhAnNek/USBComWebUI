@@ -7,6 +7,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="ChartJs.Blazor" Version="1.1.0" />
+    <PackageReference Include="ChartJs.Blazor.Fork" Version="2.0.2" />
+    <PackageReference Include="PSC.Blazor.Components.Chartjs" Version="8.0.8" />
     <PackageReference Include="System.IO.Ports" Version="9.0.0" />
   </ItemGroup>
 
