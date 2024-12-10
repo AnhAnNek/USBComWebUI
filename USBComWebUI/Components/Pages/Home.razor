@@ -41,6 +41,7 @@
                 }
             </select>
             <button @onclick="ConnectToSerialPort" class="btn btn-success mt-2" disabled="@(string.IsNullOrEmpty(SelectedCOMPort))">Connect</button>
+            <button @onclick="DisconnectToSerialPort" class="btn btn-danger mt-2" disabled="@(CurrentSerialPort != null && !CurrentSerialPort.IsOpen)">Disconnect</button>
 
             <h3 class="mt-4">Incoming Data</h3>
             <ul>
@@ -120,12 +121,33 @@
                 CurrentSerialPort.DataReceived += SerialPortDataReceived;
                 CurrentSerialPort.Open();
 
+
+                Console.WriteLine($"Connected to {SelectedCOMPort}.");
                 SerialPortData.Add($"Connected to {SelectedCOMPort}.");
             }
             catch (Exception ex)
             {
                 SerialPortData.Add($"Error connecting to {SelectedCOMPort}: {ex.Message}");
             }
+        }
+    }
+    
+    private async Task DisconnectToSerialPort()
+    {
+        if (CurrentSerialPort != null && CurrentSerialPort.IsOpen)
+        {
+            try
+            {
+                CurrentSerialPort.Close();
+                Console.WriteLine("Disconnected.");
+                SerialPortData.Add("Disconnected.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error disconnecting: {ex.Message}");
+            }
+        } else {
+            Console.WriteLine("Port is not open. Nothing to disconnect.");
         }
     }
 
