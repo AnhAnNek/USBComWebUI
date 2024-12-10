@@ -88,27 +88,25 @@
 
     private void SendMessage()
     {
-            Messages.Add($"You: {NewMessage}");
+        Messages.Add(NewMessage);
 
-            // Send the message to the serial port
-            // if (CurrentSerialPort != null && CurrentSerialPort.IsOpen)
-            // {
-            //     try
-            //     {
-            //         CurrentSerialPort.WriteLine(NewMessage);
-            //     }
-            //     catch (Exception ex)
-            //     {
-            //         Messages.Add($"Error sending message: {ex.Message}");
-            //     }
-            // }
-            // else
-            // {
-            //     Messages.Add("Error: Serial port is not connected.");
-            // }
+        if (CurrentSerialPort != null && CurrentSerialPort.IsOpen)
+        {
+            try
+            {
+                CurrentSerialPort.WriteLine(NewMessage);
+            }
+            catch (Exception ex)
+            {
+                Messages.Add($"Error sending message: {ex.Message}");
+            }
+        }
+        else
+        {
+            Messages.Add("Error: Serial port is not connected.");
+        }
 
-            NewMessage = string.Empty;
-        // }
+         NewMessage = string.Empty;
     }
 
     private async Task ConnectToSerialPort()

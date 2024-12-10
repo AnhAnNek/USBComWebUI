@@ -1,19 +1,172 @@
 ﻿@page "/counter"
+@using USBComWebUI.Components.Services
 @rendermode InteractiveServer
+@implements IDisposable
 
-<PageTitle>Counter</PageTitle>
+<PageTitle>LED Control System</PageTitle>
 
-<h1>Counter</h1>
+@if (isSuccess)
+{
+    <div class="alert alert-success">
+        Operation was successful!
+    </div>
+}
+else if (isFailure)
+{
+    <div class="alert alert-danger">
+        Operation failed. Please try again.
+    </div>
+}
+else
+{
+    <p>No operation has been performed yet.</p>
+}
 
-<p role="status">Current count: @currentCount</p>
+<h1 class="text-center text-success">LED CONTROL SYSTEMS</h1>
 
-<button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
+<div class="container">
+    <div class="row">
+        <!-- Main Controller Section -->
+        <div class="col-md-6">
+            <h3>Main Controller</h3>
+            <div class="mb-2">
+                <button class="btn btn-primary me-2" @onclick="TurnOnLED1">LED1 ON</button>
+                <button class="btn btn-danger" @onclick="TurnOffLED1">LED1 OFF</button>
+            </div>
+            <div class="mb-2">
+                <button class="btn btn-primary me-2" @onclick="TurnOnLED2">LED2 ON</button>
+                <button class="btn btn-danger" @onclick="TurnOffLED2">LED2 OFF</button>
+            </div>
+        </div>
+
+        <!-- Communication Section -->
+        <div class="col-md-6">
+            <h3>Communication</h3>
+            <div class="mb-3">
+                <label for="comport" class="form-label">Select Comport:</label>
+                <select id="comport" class="form-select" @bind="selectedComport">
+                    @foreach (var port in availableComports)
+                    {
+                        <option value="@port">@port</option>
+                    }
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="baudrate" class="form-label">Baudrate:</label>
+                <select id="baudrate" class="form-select" @bind="selectedBaudrate">
+                    <option value="9600">9600</option>
+                    <option value="115200">115200</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="parity" class="form-label">Parity:</label>
+                <select id="parity" class="form-select" @bind="selectedParity">
+                    <option value="None">None</option>
+                    <option value="Even">Even</option>
+                    <option value="Odd">Odd</option>
+                </select>
+            </div>
+            <button class="btn btn-success me-2" @onclick="Connect">CONNECT</button>
+            <button class="btn btn-danger" @onclick="Disconnect">EXIT</button>
+        </div>
+    </div>
+
+    <div @bind="selectedComport"></div>
+
+    <!-- Data Section -->
+    <div class="mt-4">
+        <h3>Data</h3>
+        <div class="row">
+            <div class="col-md-4">
+                <label for="temperature" class="form-label">Temperature</label>
+                <input id="temperature" class="form-control" type="text" readonly value="@temperature" />
+            </div>
+            <div class="col-md-4">
+                <label for="pressure" class="form-label">Press:</label>
+                <input id="pressure" class="form-control" type="text" readonly value="@pressure" />
+            </div>
+            <div class="col-md-4">
+                <label for="humidity" class="form-label">Humi:</label>
+                <input id="humidity" class="form-control" type="text" readonly value="@humidity" />
+            </div>
+        </div>
+    </div>
+</div>
 
 @code {
-    private int currentCount = 0;
+    private string selectedComport;
+    private int selectedBaudrate = 9600;
+    private string selectedParity = "None";
+    public string temperature = "25°C";
+    private string pressure = "... hPa";
+    private string humidity = "...%";
+    private ComConnection comConnection;
+    private bool isSuccess = false;
+    private bool isFailure = false;
 
-    private void IncrementCount()
+    private List<string> availableComports = new List<string>
     {
-        currentCount++;
+        "COM1",
+        "COM2",
+        "COM3",
+        "COM4"
+    };
+
+    private void TurnOnLED1() => comConnection.Send("B1");
+    private void TurnOffLED1() => comConnection.Send("T1");
+
+    private void TurnOnLED2() => comConnection.Send("B2");
+    private void TurnOffLED2() => comConnection.Send("T2");
+
+    protected override void OnInitialized()
+    {
+        Init();
+    }
+
+    private void Init()
+    {
+        comConnection = new ComConnection();
+        availableComports = comConnection.GetAllPorts();
+
+        selectedComport = availableComports.FirstOrDefault() ?? "COM1"; // Default to first COM port
+
+
+        comConnection.OnDataReceived += OnDataReceivedHandler;
+
+        Console.WriteLine("Initialization complete");
+    }
+
+    private void Connect()
+    {
+        Boolean connected = comConnection.OnConn(selectedComport, selectedBaudrate);
+        if (connected)
+        {
+            isSuccess = true;
+            isFailure = false;
+        }
+        else
+        {
+            isSuccess = false;
+            isFailure = true;
+        }
+    }
+
+    private void OnDataReceivedHandler(string data)
+    {
+        Console.WriteLine($"Callback: Data received - {data}");
+        temperature = data;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void Disconnect()
+    {
+        comConnection.OnDisconnect();
+        Console.WriteLine("Disconnected");
+    }
+
+    public void Dispose()
+    {
+        comConnection?.OnDisconnect();
+        comConnection.OnDataReceived -= OnDataReceivedHandler;
     }
 }
