@@ -21,7 +21,7 @@ namespace USBComWebUI.Components.Services
 
         public Boolean OnConn(string portName, int baudRate = 9600)
         {
-            if (serCOM.IsOpen)
+            if (IsConnected())
             {
                 Console.WriteLine("Port is already open.");
                 return true;
@@ -49,7 +49,7 @@ namespace USBComWebUI.Components.Services
 
         public void Send(string data)
         {
-            if (serCOM.IsOpen)
+            if (IsConnected())
             {
                 try
                 {
@@ -85,7 +85,7 @@ namespace USBComWebUI.Components.Services
 
         public void OnDisconnect()
         {
-            if (serCOM.IsOpen)
+            if (IsConnected())
             {
                 try
                 {
@@ -124,6 +124,11 @@ namespace USBComWebUI.Components.Services
                 Console.WriteLine($"Error retrieving COM ports: {ex.Message}");
                 return new List<string>();
             }
+        }
+
+        public Boolean IsConnected()
+        {
+            return serCOM != null && serCOM.IsOpen;
         }
     }
 }

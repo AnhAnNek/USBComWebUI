@@ -1,9 +1,28 @@
 ﻿@page "/"
+@using USBComWebUI.Components.Services
 @rendermode InteractiveServer
 
 <PageTitle>Chat</PageTitle>
 
 <h1>Chat & Serial Port Communication</h1>
+
+
+@if (isSuccess)
+{
+    <div class="alert alert-success">
+        Operation was successful!
+    </div>
+}
+else if (isFailure)
+{
+    <div class="alert alert-danger">
+        Operation failed. Please try again.
+    </div>
+}
+else
+{
+    <p>No operation has been performed yet.</p>
+}
 
 <div class="container">
     <div class="row">
@@ -41,7 +60,7 @@
                 }
             </select>
             <button @onclick="ConnectToSerialPort" class="btn btn-success mt-2" disabled="@(string.IsNullOrEmpty(SelectedCOMPort))">Connect</button>
-            <button @onclick="DisconnectToSerialPort" class="btn btn-danger mt-2" disabled="@(CurrentSerialPort != null && !CurrentSerialPort.IsOpen)">Disconnect</button>
+            <button @onclick="DisconnectToSerialPort" class="btn btn-danger mt-2" disabled="@(comConnection != null)">Disconnect</button>
 
             <h3 class="mt-4">Incoming Data</h3>
             <ul>
@@ -63,23 +82,26 @@
     private List<string> COMPorts = new List<string>();
     private string SelectedCOMPort;
     private List<string> SerialPortData = new List<string>();
-    private System.IO.Ports.SerialPort CurrentSerialPort;
+    private ComConnection comConnection;
+    private bool isSuccess = false;
+    private bool isFailure = false;
 
     // On component initialization, load available COM ports
     protected override async Task OnInitializedAsync()
     {
         await LoadCOMPorts();
 
-        Messages.Add("You: Xin Chao");
-        Messages.Add("You: Tra loi di");
+        comConnection.OnDataReceived += OnReceived;
+
+        Messages.Add("Xin Chao");
     }
 
     private async Task LoadCOMPorts()
     {
         try
         {
-            // Fetch available COM ports
-            COMPorts = await Task.Run(() => System.IO.Ports.SerialPort.GetPortNames().ToList());
+            comConnection = new ComConnection();
+            COMPorts = comConnection.GetAllPorts();
         }
         catch (Exception ex)
         {
@@ -89,25 +111,30 @@
 
     private void SendMessage()
     {
-        Messages.Add(NewMessage);
+        if (string.IsNullOrEmpty(NewMessage))
+        {
+            Console.WriteLine("Message is Required");
+            return;
+        }
 
-        if (CurrentSerialPort != null && CurrentSerialPort.IsOpen)
+        if (comConnection != null)
         {
             try
             {
-                CurrentSerialPort.WriteLine(NewMessage);
+                comConnection.Send(NewMessage);
+                Messages.Add(NewMessage);
             }
             catch (Exception ex)
             {
-                Messages.Add($"Error sending message: {ex.Message}");
+                Console.WriteLine($"Error sending message: {ex.Message}");
             }
         }
         else
         {
-            Messages.Add("Error: Serial port is not connected.");
+            Console.WriteLine("Error: Serial port is not connected.");
         }
 
-         NewMessage = string.Empty;
+        NewMessage = string.Empty;
     }
 
     private async Task ConnectToSerialPort()
@@ -116,14 +143,20 @@
         {
             try
             {
-                // Initialize and open the serial port
-                CurrentSerialPort = new System.IO.Ports.SerialPort(SelectedCOMPort, 9600); // Adjust baud rate as needed
-                CurrentSerialPort.DataReceived += SerialPortDataReceived;
-                CurrentSerialPort.Open();
+                Boolean connected = comConnection.OnConn(SelectedCOMPort, 9600);
+                if (connected)
+                {
+                    isSuccess = true;
+                    isFailure = false;
+                    Console.WriteLine($"Connected to {SelectedCOMPort}.");
+                    SerialPortData.Add($"Connected to {SelectedCOMPort}.");
+                }
+                else
+                {
+                    isSuccess = false;
+                    isFailure = true;
+                }
 
-
-                Console.WriteLine($"Connected to {SelectedCOMPort}.");
-                SerialPortData.Add($"Connected to {SelectedCOMPort}.");
             }
             catch (Exception ex)
             {
@@ -131,32 +164,16 @@
             }
         }
     }
-    
+
     private async Task DisconnectToSerialPort()
     {
-        if (CurrentSerialPort != null && CurrentSerialPort.IsOpen)
-        {
-            try
-            {
-                CurrentSerialPort.Close();
-                Console.WriteLine("Disconnected.");
-                SerialPortData.Add("Disconnected.");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error disconnecting: {ex.Message}");
-            }
-        } else {
-            Console.WriteLine("Port is not open. Nothing to disconnect.");
-        }
+        comConnection.OnDisconnect();
     }
 
-    private void SerialPortDataReceived(object sender, System.IO.Ports.SerialDataReceivedEventArgs e)
+    private void OnReceived(string incomingData)
     {
         try
         {
-            // Read incoming data from the serial port
-            string incomingData = CurrentSerialPort?.ReadLine();
             if (!string.IsNullOrEmpty(incomingData))
             {
                 // Update the UI with the received data
@@ -175,12 +192,7 @@
 
     public void Dispose()
     {
-        // Clean up the serial port connection when the component is disposed
-        if (CurrentSerialPort != null && CurrentSerialPort.IsOpen)
-        {
-            CurrentSerialPort.DataReceived -= SerialPortDataReceived;
-            CurrentSerialPort.Close();
-            CurrentSerialPort.Dispose();
-        }
+        comConnection.OnDisconnect();
+        comConnection.OnDataReceived -= OnReceived;
     }
 }
