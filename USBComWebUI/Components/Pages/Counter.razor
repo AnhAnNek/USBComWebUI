@@ -158,14 +158,6 @@ else
         _lineConfig.Data.Labels.Add("February");
         _lineConfig.Data.Labels.Add("March");
 
-        var dataset = new LineDataset<int>(new[] { 10,140, 15 })
-            {
-                Label = "Sample Data",  // Dòng dữ liệu
-                Fill = true,  // Cho phép điền màu dưới đường
-                BorderColor = ColorUtil.ColorHexString(0, 0, 255),  // Màu đường
-                BackgroundColor = ColorUtil.ColorHexString(0, 0, 255)  // Màu nền của đường (màu trong suốt)
-            };
-        _lineConfig.Data.Datasets.Add(dataset);
     }
 
     private void ConfigurePieConfig(){
@@ -228,6 +220,18 @@ else
     {
         Console.WriteLine($"Callback: Data received - {data}");
         temperature = data;
+
+        int a = int.Parse(data);
+
+        var dataset = new LineDataset<int>(new[] { a,a+10, a+5})
+            {
+                Label = "Sample Data",  // Dòng dữ liệu
+                Fill = true,  // Cho phép điền màu dưới đường
+                BorderColor = ColorUtil.ColorHexString(0, 0, 255),  // Màu đường
+                BackgroundColor = ColorUtil.ColorHexString(0, 0, 255)  // Màu nền của đường (màu trong suốt)
+            };
+        _lineConfig.Data.Datasets.Add(dataset);
+
         InvokeAsync(StateHasChanged);
     }
 
